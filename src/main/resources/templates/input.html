@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ローン＆光熱費シミュレーター - 入力画面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'メイリオ', Meiryo, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .input-hint {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+        }
+        
+        .submit-button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+        
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .submit-button:active {
+            transform: translateY(0);
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        /* 処理中のボタンのスタイル */
+        .submit-button:disabled {
+            background: #a0aec0; /* グレーアウト */
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* ローディングスピナー（オプション） */
+        .loader {
+            display: none; /* 初期状態は非表示 */
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .submit-button:disabled {
+        background: linear-gradient(135deg, #a0aec0 0%, #718096 100%); /* グレーに変更 */
+        cursor: not-allowed;
+        transform: none !important;
+        box-shadow: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏠 ローン＆光熱費シミュレーター</h1>
+        
+        <div th:if="${error}" class="error-message" style="background: #fee; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #e74c3c;">
+            <strong>エラー:</strong> <span th:text="${error}"></span>
+        </div>
+        
+        <form th:action="@{/simulation/calculate}" th:object="${simulationInput}" method="post">
+            <div class="form-group">
+                <label for="annualIncome">年収（万円）</label>
+                <input type="number" id="annualIncome" th:field="*{annualIncome}" 
+                       min="0" step="1" required>
+                <div class="input-hint">税込み年収を入力してください</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="budget">予算（万円）</label>
+                <input type="number" id="budget" th:field="*{budget}" 
+                       min="0" step="1" required>
+                <div class="input-hint">住宅購入の予算を入力してください</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="currentRent">現在の家賃（円）</label>
+                <input type="number" id="currentRent" th:field="*{currentRent}" 
+                       min="0" step="1000" required>
+                <div class="input-hint">現在お支払い中の月額家賃を入力してください</div>
+            </div>
+
+            <div class="form-group">
+                <label for="familyComposition">家族構成</label>
+                <select th:field="*{familyComposition}" 
+                        id="familyComposition" 
+                        name="familyComposition"
+                        required 
+                        onchange="handleCompositionChange(event)">
+                    <option value="">選択してください</option>
+                    <option value="単身">単身</option>
+                    <option value="夫婦2人">夫婦2人</option>
+                    <option value="夫婦+子1人">夫婦+子1人</option>
+                    <option value="夫婦+子2人">夫婦+子2人</option>
+                    <option value="夫婦+子3人">夫婦+子3人</option>
+                    <option value="その他">その他</option>
+                </select>
+                <div class="input-hint">ご家族の構成を選択してください</div>
+            </div>
+            
+            <div id="otherInputGroup" class="form-group" style="display: none;">
+                <label for="customFamilySize">合計人数（半角数字）</label>
+                <input type="number" 
+                       id="customFamilySize" 
+                       th:field="*{customFamilySize}" 
+                       min="1" max="20" 
+                       placeholder="例: 6"
+                       oninput="value = value.replace(/[^0-9]+/g, '');">
+            </div>
+            
+            <script>
+            function handleCompositionChange(event) {
+                // イベントが発生した要素（select）から直接値を取得
+                const selectElement = event.target;
+                const selectedValue = selectElement.value;
+                
+                const otherGroup = document.getElementById('otherInputGroup');
+                const customInput = document.getElementById('customFamilySize');
+            
+                if (selectedValue === "その他") {
+                    otherGroup.style.display = "block";
+                    customInput.required = true;
+                } else {
+                    otherGroup.style.display = "none";
+                    customInput.required = false;
+                    customInput.value = ""; 
+                }
+            }
+            
+            // ページ読み込み時の初期表示
+            document.addEventListener('DOMContentLoaded', function() {
+                const el = document.getElementById('familyComposition');
+                if (el) {
+                    // 初期状態を反映させるために偽のイベントオブジェクトを渡す
+                    handleCompositionChange({ target: el });
+                }
+            });
+
+            document.getElementById('simulationForm').addEventListener('submit', function() {
+            const btn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+
+            // ボタンを無効化して二重送信を防ぐ
+            btn.disabled = true;
+
+            // ボタンの文字を書き換える
+            // 「AI」という言葉を入れることで、課題のテーマを強調します
+            btnText.innerText = "AI分析＆計算中...";
+            
+            // 少し透過させて「処理中」を演出
+            btn.style.opacity = "0.8";
+            });
+            
+            function startLoading(buttonElement) {
+            // フォームのバリデーションチェック（未入力がないか）
+            const form = document.getElementById('simulationForm');
+            if (!form.checkValidity()) {
+                return true; // ブラウザ標準のバリデーションを優先させる
+            }
+
+            // 文字を書き換えるための要素を取得
+            const btnText = document.getElementById('btnText');
+
+            // 1. ボタンを無効化（二重送信防止）
+            // ※setTimeoutを使わないと、無効化が早すぎてフォームが送信されない場合があります
+            setTimeout(() => {
+                buttonElement.disabled = true;
+            }, 1);
+
+            // 2. 文字を書き換える
+            btnText.innerText = "AI分析＆計算中...";
+
+            // 3. 見た目を少し変える（処理中を演出）
+            buttonElement.style.opacity = "0.7";
+            buttonElement.style.cursor = "not-allowed";
+
+            return true; // フォーム送信を継続
+            }
+            </script>
+            
+            <form th:action="@{/simulation/calculate}" th:object="${simulationInput}" method="post" id="simulationForm">
+                <button type="submit" class="submit-button" id="submitBtn" onclick="return startLoading(this)">
+                    <span id="btnText">シミュレーション実行</span>
+                </button>
+            </form>
+        </form>
+    </div>
+</body>
+</html>
+

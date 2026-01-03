@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ローン＆光熱費シミュレーター - 結果表示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'メイリオ', Meiryo, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        .result-section {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .result-section h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .result-item {
+            margin-bottom: 15px;
+        }
+        
+        .result-label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .result-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            margin-top: 5px;
+        }
+        
+        .positive-value {
+            color: #27ae60;
+        }
+        
+        .negative-value {
+            color: #e74c3c;
+        }
+        
+        .ai-advice-section {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 30px;
+        }
+        
+        .ai-advice-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            line-height: 1.8;
+            color: #333;
+            white-space: pre-wrap;
+            font-size: 15px;
+        }
+        
+        .input-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .input-item {
+            font-size: 14px;
+            color: #333;
+        }
+        
+        .input-item strong {
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .input-item span {
+            color: #222;
+            font-weight: 500;
+        }
+        
+        .back-button {
+            width: 100%;
+            padding: 16px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 30px;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+        
+        .back-button:hover {
+            background: #5a6268;
+        }
+        
+        .emoji {
+            font-size: 24px;
+        }
+        
+        .info-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            line-height: 20px;
+            text-align: center;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-left: 8px;
+            vertical-align: middle;
+            transition: background 0.3s;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .info-icon:hover {
+            background: #5568d3;
+        }
+        
+        .info-icon:active {
+            background: #4457b3;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .modal-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .modal-text {
+            line-height: 1.8;
+            color: #555;
+            font-size: 14px;
+        }
+        
+        .modal-section {
+            margin-bottom: 20px;
+        }
+        
+        .modal-section h3 {
+            font-size: 16px;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .modal-list {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .modal-list li {
+            margin-bottom: 8px;
+        }
+        
+        .example-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border-left: 4px solid #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 シミュレーション結果</h1>
+        
+        <!-- 入力情報 -->
+        <div class="result-section">
+            <h2><span class="emoji">📝</span>入力情報</h2>
+            <div class="input-info">
+                <div class="input-item">
+                    <strong>年収:</strong> 
+                    <span th:text="${result.input.annualIncome} + '万円'"></span>
+                </div>
+                <div class="input-item">
+                    <strong>予算:</strong> 
+                    <span th:text="${result.input.budget} + '万円'"></span>
+                </div>
+                <div class="input-item">
+                    <strong>現在の家賃:</strong> 
+                    <span th:text="${#numbers.formatInteger(result.input.currentRent, 0, 'COMMA')} + '円/月'"></span>
+                </div>
+                <div class="input-item">
+                    <strong>家族構成:</strong> 
+                    <span th:text="${result.input.familyComposition}"></span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 計算結果 -->
+        <div class="result-section">
+            <h2><span class="emoji">💰</span>計算結果</h2>
+            <div class="result-item">
+                <div class="result-label">毎月の返済額</div>
+                <div class="result-value">
+                    <span th:text="${#numbers.formatInteger(result.monthlyPayment, 0, 'COMMA')} + '円'"></span>
+                </div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">返済額と現在の家賃の差額</div>
+                <div class="result-value" 
+                     th:classappend="${result.rentDifference < 0} ? 'positive-value' : (${result.rentDifference > 0} ? 'negative-value' : '')">
+                    <span th:if="${result.rentDifference < 0}" 
+                          th:text="'家賃より安い: ' + ${#numbers.formatInteger(-result.rentDifference, 0, 'COMMA')} + '円'"></span>
+                    <span th:if="${result.rentDifference > 0}" 
+                          th:text="'家賃より高い: ' + ${#numbers.formatInteger(result.rentDifference, 0, 'COMMA')} + '円'"></span>
+                    <span th:if="${result.rentDifference == 0}" 
+                          th:text="'差額なし'"></span>
+                </div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">
+                    大手HMとの光熱費差額（月額）
+                    <span class="info-icon" onclick="openModal()" ontouchstart="openModal()">?</span>
+                </div>
+                <div class="result-value" 
+                     th:classappend="${result.utilityCostDifference > 0} ? 'positive-value' : (${result.utilityCostDifference < 0} ? 'negative-value' : '')">
+                    <span th:if="${result.utilityCostDifference > 0}" 
+                          th:text="'節約: ' + ${#numbers.formatDecimal(result.utilityCostDifference, 1, 'COMMA', 2, 'POINT')} + '円'"></span>
+                    <span th:if="${result.utilityCostDifference < 0}" 
+                          th:text="'高額: ' + ${#numbers.formatDecimal(-result.utilityCostDifference, 1, 'COMMA', 2, 'POINT')} + '円'"></span>
+                    <span th:if="${result.utilityCostDifference == 0}" 
+                          th:text="'差額なし'"></span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- AIアドバイス -->
+        <div class="result-section ai-advice-section">
+            <h2><span class="emoji">🤖</span>AI営業アドバイス</h2>
+            <div class="ai-advice-content" th:text="${result.aiAdvice}"></div>
+        </div>
+        
+        <a th:href="@{/simulation/input}" class="back-button">新しいシミュレーション</a>
+    </div>
+    
+    <!-- モーダルウィンドウ -->
+    <div id="infoModal" class="modal" onclick="closeModalOnBackdrop(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div class="modal-title">大手HMとの光熱費差額の計算方法</div>
+            <div class="modal-text">
+                <div class="modal-section">
+                    <h3>1. 大手ハウスメーカーの平均光熱費</h3>
+                    <p>大手ハウスメーカーの平均的な光熱費を <strong>25,000円/月</strong> として設定しています。</p>
+                </div>
+                
+                <div class="modal-section">
+                    <h3>2. 当社の想定光熱費（家族構成別）</h3>
+                    <p>当社の住宅の光熱費は、以下の計算式で算出しています：</p>
+                    <ul class="modal-list">
+                        <li><strong>1人目:</strong> 15,000円/月</li>
+                        <li><strong>2人目以降:</strong> 8,000.5円/月を加算</li>
+                    </ul>
+                    <div class="example-box">
+                        <strong>計算例:</strong><br>
+                        ・単身: 15,000円<br>
+                        ・夫婦2人: 15,000 + 8,000.5 = 23,000.5円<br>
+                        ・夫婦+子2人（4人）: 15,000 + (4-1) × 8,000.5 = 39,001.5円
+                    </div>
+                </div>
+                
+                <div class="modal-section">
+                    <h3>3. 差額の計算</h3>
+                    <p><strong>差額 = 大手HMの光熱費（25,000円） - 当社の想定光熱費</strong></p>
+                    <div class="example-box">
+                        <strong>例（夫婦2人の場合）:</strong><br>
+                        大手HM: 25,000円/月<br>
+                        当社: 23,000.5円/月<br>
+                        差額: 25,000 - 23,000.5 = <strong>1,999.5円/月（当社の方が安い）</strong>
+                    </div>
+                </div>
+                
+                <div class="modal-section">
+                    <h3>注意事項</h3>
+                    <p>現在の計算は簡易的な目安です。実際の光熱費は以下の要因によって大きく異なります：</p>
+                    <ul class="modal-list">
+                        <li>住宅の断熱性能</li>
+                        <li>冷暖房の使用状況</li>
+                        <li>エネルギー効率の高い設備の有無</li>
+                        <li>地域や気候条件</li>
+                        <li>ライフスタイル</li>
+                    </ul>
+                    <p>より正確な見積もりについては、お気軽にご相談ください。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function openModal() {
+            document.getElementById('infoModal').style.display = 'flex';
+        }
+        
+        function closeModal() {
+            document.getElementById('infoModal').style.display = 'none';
+        }
+        
+        function closeModalOnBackdrop(event) {
+            if (event.target === event.currentTarget) {
+                closeModal();
+            }
+        }
+        
+        // ESCキーでモーダルを閉じる
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
+
